@@ -157,12 +157,17 @@ public class BackpackDisplayManager implements Listener {
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
-        Location to = event.getTo();
+        if (activeDisplays.isEmpty()) {
+            return;
+        }
+
         Player player = event.getPlayer();
         ItemDisplay display = activeDisplays.get(player.getUniqueId());
         if (display == null || !display.isValid()) {
             return;
         }
+
+        Location to = event.getTo();
 
         ConfigManager cfg = plugin.getConfigManager();
         boolean isPassenger = cfg.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
