@@ -22,6 +22,7 @@ public class CosmeticManager {
         this.plugin = plugin;
         this.validator = new CosmeticValidator(plugin);
         this.displayManager = new BackpackDisplayManager(plugin);
+        this.displayManager.startTickTask();
     }
 
     /**

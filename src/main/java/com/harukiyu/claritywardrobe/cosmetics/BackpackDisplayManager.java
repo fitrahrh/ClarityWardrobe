@@ -15,6 +15,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -46,7 +48,6 @@ public class BackpackDisplayManager implements Listener {
         this.displayKey = new NamespacedKey(plugin, "backpack_display");
 
         cleanDanglingDisplays();
-        startTickTask();
     }
 
     /**
@@ -73,8 +74,13 @@ public class BackpackDisplayManager implements Listener {
             return;
         }
 
+        Location pLoc = player.getLocation();
+        if (pLoc == null || pLoc.getWorld() == null) {
+            return;
+        }
+
         boolean isPassenger = config.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
-        Location spawnLoc = isPassenger ? player.getLocation() : calculateBackLocation(player);
+        Location spawnLoc = isPassenger ? pLoc : calculateBackLocation(player, pLoc);
         if (spawnLoc == null || spawnLoc.getWorld() == null) {
             return;
         }
@@ -89,6 +95,7 @@ public class BackpackDisplayManager implements Listener {
             entity.setPersistent(false);
             entity.setInvulnerable(true);
             entity.setViewRange(1.0f);
+            entity.setRotation(pLoc.getYaw(), 0f);
 
             applyTransformation(entity, player.isSneaking());
             entity.getPersistentDataContainer().set(displayKey, PersistentDataType.STRING, player.getUniqueId().toString());
@@ -96,6 +103,7 @@ public class BackpackDisplayManager implements Listener {
 
         if (isPassenger) {
             player.addPassenger(display);
+            display.setRotation(pLoc.getYaw(), 0f);
         }
 
         activeDisplays.put(player.getUniqueId(), display);
@@ -144,6 +152,76 @@ public class BackpackDisplayManager implements Listener {
     }
 
     /**
+     * Instantly synchronizes the backpack ItemDisplay rotation or position
+     * whenever the player moves or looks around, eliminating all delay.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Location to = event.getTo();
+        Player player = event.getPlayer();
+        ItemDisplay display = activeDisplays.get(player.getUniqueId());
+        if (display == null || !display.isValid()) {
+            return;
+        }
+
+        ConfigManager cfg = plugin.getConfigManager();
+        boolean isPassenger = cfg.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
+
+        if (isPassenger) {
+            Location from = event.getFrom();
+            if (from.getYaw() != to.getYaw()) {
+                display.setRotation(to.getYaw(), 0f);
+            }
+        } else {
+            Location from = event.getFrom();
+            boolean moved = from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ()
+                    || from.getYaw() != to.getYaw() || from.getPitch() != to.getPitch();
+            if (moved) {
+                Location targetLoc = calculateBackLocation(player, to);
+                if (targetLoc != null) {
+                    display.teleport(targetLoc);
+                }
+            }
+        }
+    }
+
+    /**
+     * Handles instant position and rotation synchronization on player teleportation.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+        ItemDisplay display = activeDisplays.get(player.getUniqueId());
+        if (display == null || !display.isValid()) {
+            return;
+        }
+
+        Location to = event.getTo();
+
+        ConfigManager cfg = plugin.getConfigManager();
+        boolean isPassenger = cfg.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
+
+        if (isPassenger) {
+            if (!to.getWorld().equals(display.getWorld())) {
+                display.remove();
+                ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, WardrobeSlotType.BACKPACK);
+                if (cosmetic != null) {
+                    updateCosmetic(player, cosmetic);
+                }
+            } else {
+                display.teleport(to);
+                player.addPassenger(display);
+                display.setRotation(to.getYaw(), 0f);
+            }
+        } else {
+            Location targetLoc = calculateBackLocation(player, to);
+            if (targetLoc != null) {
+                display.teleport(targetLoc);
+            }
+        }
+    }
+
+    /**
      * Prevents the backpack display passenger from being ejected or dismounted.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -182,15 +260,10 @@ public class BackpackDisplayManager implements Listener {
     }
 
     /**
-     * Calculates the exact coordinate behind the player's upper spine (for TELEPORT mode fallback).
+     * Calculates the exact coordinate behind the player's upper spine at a specific location.
      */
-    public Location calculateBackLocation(Player player) {
-        if (player == null) {
-            return null;
-        }
-
-        Location pLoc = player.getLocation();
-        if (pLoc == null || pLoc.getWorld() == null) {
+    public Location calculateBackLocation(Player player, Location pLoc) {
+        if (player == null || pLoc == null || pLoc.getWorld() == null) {
             return null;
         }
 
@@ -225,9 +298,22 @@ public class BackpackDisplayManager implements Listener {
     }
 
     /**
+     * Calculates the exact coordinate behind the player's upper spine (for TELEPORT mode fallback).
+     */
+    public Location calculateBackLocation(Player player) {
+        if (player == null) {
+            return null;
+        }
+        return calculateBackLocation(player, player.getLocation());
+    }
+
+    /**
      * Ticks movement and visibility for all active backpack displays.
      */
-    private void startTickTask() {
+    public void startTickTask() {
+        if (tickTask != null) {
+            tickTask.cancel();
+        }
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             ConfigManager cfg = plugin.getConfigManager();
             boolean isPassenger = cfg.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
@@ -244,8 +330,13 @@ public class BackpackDisplayManager implements Listener {
                     continue;
                 }
 
+                Location pLoc = player.getLocation();
+                if (pLoc == null || pLoc.getWorld() == null) {
+                    continue;
+                }
+
                 // Check world match
-                if (!display.getWorld().equals(player.getWorld())) {
+                if (!display.getWorld().equals(pLoc.getWorld())) {
                     display.remove();
                     ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, WardrobeSlotType.BACKPACK);
                     if (cosmetic != null) {
@@ -278,11 +369,14 @@ public class BackpackDisplayManager implements Listener {
                 if (isPassenger) {
                     // Lock directly as passenger to eliminate all walking/running delay
                     if (!player.getPassengers().contains(display)) {
+                        display.teleport(pLoc);
                         player.addPassenger(display);
                     }
+                    // Synchronize passenger ItemDisplay yaw with the player's yaw
+                    display.setRotation(pLoc.getYaw(), 0f);
                 } else {
                     // Fallback standalone teleport mode
-                    Location targetLoc = calculateBackLocation(player);
+                    Location targetLoc = calculateBackLocation(player, pLoc);
                     if (targetLoc != null) {
                         display.teleport(targetLoc);
                     }
