@@ -5,11 +5,10 @@
 
 # Settings for cosmetic visual rendering
 rendering:
-  # Method to render cosmetic helmet/hat:
-  # - BOTH (Recommended): Combines ProtocolLib (for other players) and ItemDisplay (for self F5 third-person view).
-  # - ITEM_DISPLAY: Uses Minecraft 1.21+ ItemDisplay entity attached to the player's head.
-  # - PROTOCOLLIB: Intercepts ENTITY_EQUIPMENT packets only.
-  helmet-renderer: BOTH
+  # Method to override the visual helmet:
+  # - PROTOCOLLIB: Intercepts ENTITY_EQUIPMENT packets so vanilla armor stays on the player
+  #                and the cosmetic hat is worn directly on the head slot (never floating).
+  helmet-renderer: PROTOCOLLIB
 
   # Method to render backpack and wings:
   # - ITEM_DISPLAY: Uses Minecraft 1.21+ native ItemDisplay entity attached to player's back.

@@ -14,7 +14,7 @@ public class ConfigManager {
     private MenuConfig menuConfig;
 
     // Rendering settings
-    private String helmetRenderer = "BOTH";
+    private String helmetRenderer = "PROTOCOLLIB";
     private String backpackRenderer = "ITEM_DISPLAY";
 
     // ItemDisplay offsets
@@ -47,8 +47,8 @@ public class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
-        String rawHelmet = config.getString("rendering.helmet-renderer", "BOTH");
-        helmetRenderer = (rawHelmet != null ? rawHelmet : "BOTH").toUpperCase();
+        String rawHelmet = config.getString("rendering.helmet-renderer", "PROTOCOLLIB");
+        helmetRenderer = (rawHelmet != null ? rawHelmet : "PROTOCOLLIB").toUpperCase();
 
         String rawBackpack = config.getString("rendering.backpack-renderer", "ITEM_DISPLAY");
         backpackRenderer = (rawBackpack != null ? rawBackpack : "ITEM_DISPLAY").toUpperCase();

@@ -224,9 +224,11 @@ public class BackpackDisplayManager {
      * Cleans up any leftover dangling displays from unexpected restarts or crashes.
      */
     public final void cleanDanglingDisplays() {
+        NamespacedKey helmetKey = new NamespacedKey(plugin, "helmet_display");
         for (World world : Bukkit.getWorlds()) {
             for (Entity entity : world.getEntitiesByClass(ItemDisplay.class)) {
-                if (entity.getPersistentDataContainer().has(displayKey, PersistentDataType.STRING)) {
+                if (entity.getPersistentDataContainer().has(displayKey, PersistentDataType.STRING)
+                        || entity.getPersistentDataContainer().has(helmetKey, PersistentDataType.STRING)) {
                     entity.remove();
                 }
             }

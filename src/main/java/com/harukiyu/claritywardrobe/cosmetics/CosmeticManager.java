@@ -17,13 +17,11 @@ public class CosmeticManager {
     private final ClarityWardrobe plugin;
     private final CosmeticValidator validator;
     private final BackpackDisplayManager displayManager;
-    private final HeadDisplayManager headDisplayManager;
 
     public CosmeticManager(ClarityWardrobe plugin) {
         this.plugin = plugin;
         this.validator = new CosmeticValidator(plugin);
         this.displayManager = new BackpackDisplayManager(plugin);
-        this.headDisplayManager = new HeadDisplayManager(plugin);
     }
 
     /**
@@ -59,13 +57,7 @@ public class CosmeticManager {
 
         // Apply visual updates
         if (slotType == WardrobeSlotType.HELMET) {
-            String mode = plugin.getConfigManager().getHelmetRenderer();
-            if (mode.equalsIgnoreCase("ITEM_DISPLAY") || mode.equalsIgnoreCase("BOTH")) {
-                headDisplayManager.updateCosmetic(player, item);
-            }
-            if (mode.equalsIgnoreCase("PROTOCOLLIB") || mode.equalsIgnoreCase("BOTH")) {
-                plugin.getProtocolLibHook().refreshEquipment(player);
-            }
+            plugin.getProtocolLibHook().refreshEquipment(player);
         } else if (slotType == WardrobeSlotType.BACKPACK) {
             String mode = plugin.getConfigManager().getBackpackRenderer();
             if (mode.equalsIgnoreCase("ITEM_DISPLAY")) {
@@ -88,7 +80,6 @@ public class CosmeticManager {
 
         // Restore visuals to vanilla
         if (slotType == WardrobeSlotType.HELMET) {
-            headDisplayManager.removeDisplay(player);
             plugin.getProtocolLibHook().refreshEquipment(player);
         } else if (slotType == WardrobeSlotType.BACKPACK) {
             String mode = plugin.getConfigManager().getBackpackRenderer();
@@ -134,20 +125,8 @@ public class CosmeticManager {
         PlayerWardrobeData data = plugin.getStorage().getPlayerData(player.getUniqueId());
         if (data == null) return;
 
-        // Refresh Helmet
-        if (data.hasCosmetic(WardrobeSlotType.HELMET)) {
-            String mode = plugin.getConfigManager().getHelmetRenderer();
-            ItemStack helmetItem = data.getCosmetic(WardrobeSlotType.HELMET);
-            if (mode.equalsIgnoreCase("ITEM_DISPLAY") || mode.equalsIgnoreCase("BOTH")) {
-                headDisplayManager.updateCosmetic(player, helmetItem);
-            }
-            if (mode.equalsIgnoreCase("PROTOCOLLIB") || mode.equalsIgnoreCase("BOTH")) {
-                plugin.getProtocolLibHook().refreshEquipment(player);
-            }
-        } else {
-            headDisplayManager.removeDisplay(player);
-            plugin.getProtocolLibHook().refreshEquipment(player);
-        }
+        // Refresh Helmet packet (overrides visual helmet directly on head)
+        plugin.getProtocolLibHook().refreshEquipment(player);
 
         // Refresh Backpack
         if (data.hasCosmetic(WardrobeSlotType.BACKPACK)) {
@@ -164,12 +143,11 @@ public class CosmeticManager {
     }
 
     /**
-     * Removes active displays for both head and backpack.
+     * Removes active displays for the player.
      */
     public void removeDisplays(Player player) {
         if (player == null) return;
         displayManager.removeDisplay(player);
-        headDisplayManager.removeDisplay(player);
     }
 
     public CosmeticValidator getValidator() {
@@ -180,12 +158,7 @@ public class CosmeticManager {
         return displayManager;
     }
 
-    public HeadDisplayManager getHeadDisplayManager() {
-        return headDisplayManager;
-    }
-
     public void shutdown() {
         displayManager.shutdown();
-        headDisplayManager.shutdown();
     }
 }

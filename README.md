@@ -70,11 +70,10 @@ Players can fight with full Netherite or Diamond armor defense while displaying 
 
 # Settings for cosmetic visual rendering
 rendering:
-  # Method to render cosmetic helmet/hat:
-  # - BOTH (Recommended): Combines ProtocolLib (for other players) and ItemDisplay (for self F5 third-person view).
-  # - ITEM_DISPLAY: Uses Minecraft 1.21+ ItemDisplay entity attached to the player's head.
-  # - PROTOCOLLIB: Intercepts ENTITY_EQUIPMENT packets only.
-  helmet-renderer: BOTH
+  # Method to override the visual helmet:
+  # - PROTOCOLLIB: Intercepts ENTITY_EQUIPMENT packets so vanilla armor stays on the player
+  #                and the cosmetic hat is worn directly on the head slot (never floating).
+  helmet-renderer: PROTOCOLLIB
 
   # Method to render backpack and wings:
   # - ITEM_DISPLAY: Uses Minecraft 1.21+ native ItemDisplay entity attached to player's back.
@@ -308,7 +307,7 @@ A common issue in Minecraft cosmetic plugins is that equipping real armor (e.g. 
 1. **PlayerArmorListener**: Listens to Paper's native `PlayerArmorChangeEvent`, `PlayerInteractEvent`, `InventoryClickEvent`, and `PlayerItemBreakEvent`.
 2. **Instant Visual Reapplication**: When a player puts on, swaps, or breaks real combat armor, ClarityWardrobe schedules a 1-tick delay visual refresh that immediately re-anchors the cosmetic over the real armor.
 3. **Full Combat Defense Retention**: The player's combat armor slot is never removed or swapped out, ensuring full protection, enchantments (Protection IV, Respiration, etc.), and toughness remain 100% active at all times.
-4. **Third-Person F5 Self-View**: With `helmet-renderer: BOTH`, the native `ItemDisplay` entity allows players to view their own cosmetic hat in F5 mode while ProtocolLib masks the combat armor for everyone else.
+4. **Equipment Packet Head Rendering**: Cosmetic hats and custom model helmets are worn directly on the player's head slot via ProtocolLib equipment packets (never floating in the air), matching vanilla armor equip visuals perfectly.
 
 ---
 

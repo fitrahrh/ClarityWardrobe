@@ -130,15 +130,28 @@ public class PlayerArmorListener implements Listener {
     }
 
     /**
+     * Catches when player closes their inventory after changing armor items.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onInventoryClose(org.bukkit.event.inventory.InventoryCloseEvent event) {
+        if (event.getPlayer() instanceof Player player) {
+            if (plugin.getCosmeticManager().hasCosmetic(player, WardrobeSlotType.HELMET)
+                    || plugin.getCosmeticManager().hasCosmetic(player, WardrobeSlotType.BACKPACK)) {
+                scheduleRefresh(player);
+            }
+        }
+    }
+
+    /**
      * Schedules a visual refresh on the next tick so the server's vanilla
      * equipment change completes first, then our cosmetic visual overrides it immediately.
      */
     private void scheduleRefresh(Player player) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
                 plugin.getCosmeticManager().refreshVisuals(player);
             }
-        });
+        }, 1L);
     }
 
     /**
