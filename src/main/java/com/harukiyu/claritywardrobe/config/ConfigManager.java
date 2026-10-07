@@ -17,7 +17,11 @@ public class ConfigManager {
     private String helmetRenderer = "PROTOCOLLIB";
     private String backpackRenderer = "ITEM_DISPLAY";
 
-    // ItemDisplay offsets
+    // ItemDisplay settings
+    private String itemDisplayMode = "PASSENGER";
+    private double passengerOffsetX = 0.0;
+    private double passengerOffsetY = -0.65;
+    private double passengerOffsetZ = -0.22;
     private double offsetX = 0.0;
     private double offsetY = 1.15;
     private double offsetZ = -0.22;
@@ -55,6 +59,11 @@ public class ConfigManager {
 
         ConfigurationSection displaySec = config.getConfigurationSection("rendering.item-display");
         if (displaySec != null) {
+            String rawMode = displaySec.getString("mode", "PASSENGER");
+            itemDisplayMode = (rawMode != null ? rawMode : "PASSENGER").toUpperCase();
+            passengerOffsetX = displaySec.getDouble("passenger-offset-x", 0.0);
+            passengerOffsetY = displaySec.getDouble("passenger-offset-y", -0.65);
+            passengerOffsetZ = displaySec.getDouble("passenger-offset-z", -0.22);
             offsetX = displaySec.getDouble("offset-x", 0.0);
             offsetY = displaySec.getDouble("offset-y", 1.15);
             offsetZ = displaySec.getDouble("offset-z", -0.22);
@@ -169,6 +178,22 @@ public class ConfigManager {
 
     public int getAutoSaveMinutes() {
         return autoSaveMinutes;
+    }
+
+    public String getItemDisplayMode() {
+        return itemDisplayMode;
+    }
+
+    public double getPassengerOffsetX() {
+        return passengerOffsetX;
+    }
+
+    public double getPassengerOffsetY() {
+        return passengerOffsetY;
+    }
+
+    public double getPassengerOffsetZ() {
+        return passengerOffsetZ;
     }
 
     public ConfigurationSection getSoundSection(String key) {

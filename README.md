@@ -83,8 +83,20 @@ rendering:
 
   # ItemDisplay fine-tuning settings (Only used when backpack-renderer is ITEM_DISPLAY)
   item-display:
-    # Offset relative to player position [X (left/right), Y (up/down), Z (forward/backward)]
-    # Z is negative for behind the player's spine/back.
+    # Attachment mode:
+    # - PASSENGER (Recommended): Mounts ItemDisplay directly as a passenger of the player.
+    #   Locked to player's spine at client render FPS with ZERO lag, ZERO delay, and ZERO rubberbanding!
+    # - TELEPORT: Standalone entity that teleports every tick (fallback).
+    mode: PASSENGER
+
+    # Passenger offset relative to player (Used when mode is PASSENGER):
+    # Y is negative to offset downwards from player's head/shoulder anchor to upper back/spine.
+    # Z is negative for behind the player's back.
+    passenger-offset-x: 0.0
+    passenger-offset-y: -0.65
+    passenger-offset-z: -0.22
+
+    # Standalone teleport offset (Used when mode is TELEPORT):
     offset-x: 0.0
     offset-y: 1.15
     offset-z: -0.22

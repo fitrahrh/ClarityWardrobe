@@ -50,6 +50,7 @@ public class ClarityWardrobe extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WardrobeMenuListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerArmorListener(this), this);
+        getServer().getPluginManager().registerEvents(this.cosmeticManager.getDisplayManager(), this);
 
         // 6. Register Command and Tab Completer
         WardrobeCommand wardrobeCmd = new WardrobeCommand(this);

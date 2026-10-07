@@ -1,6 +1,7 @@
 package com.harukiyu.claritywardrobe.cosmetics;
 
 import com.harukiyu.claritywardrobe.ClarityWardrobe;
+import com.harukiyu.claritywardrobe.api.WardrobeSlotType;
 import com.harukiyu.claritywardrobe.config.ConfigManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -10,6 +11,11 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
@@ -23,9 +29,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * High-performance manager for rendering backpacks and wings using Minecraft 1.21+
- * ItemDisplay entities with smooth client interpolation.
+ * ItemDisplay entities.
+ *
+ * Supports PASSENGER mounting (client-frame sync with ZERO lag while walking/running)
+ * as well as standalone TELEPORT fallback.
  */
-public class BackpackDisplayManager {
+public class BackpackDisplayManager implements Listener {
 
     private final ClarityWardrobe plugin;
     private final NamespacedKey displayKey;
@@ -64,8 +73,8 @@ public class BackpackDisplayManager {
             return;
         }
 
-        // Spawn new ItemDisplay
-        Location spawnLoc = calculateBackLocation(player);
+        boolean isPassenger = config.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
+        Location spawnLoc = isPassenger ? player.getLocation() : calculateBackLocation(player);
         if (spawnLoc == null || spawnLoc.getWorld() == null) {
             return;
         }
@@ -76,24 +85,78 @@ public class BackpackDisplayManager {
             entity.setBillboard(Display.Billboard.FIXED);
             entity.setInterpolationDuration(1);
             entity.setInterpolationDelay(0);
-            entity.setTeleportDuration(1);
+            entity.setTeleportDuration(0);
             entity.setPersistent(false);
             entity.setInvulnerable(true);
             entity.setViewRange(1.0f);
 
-            // Setup scale transformation with valid non-zero axis
-            Transformation transformation = new Transformation(
-                    new Vector3f(0f, 0f, 0f),
-                    new AxisAngle4f(0f, 0f, 1f, 0f),
-                    new Vector3f(config.getScaleX(), config.getScaleY(), config.getScaleZ()),
-                    new AxisAngle4f(0f, 0f, 1f, 0f)
-            );
-            entity.setTransformation(transformation);
-
+            applyTransformation(entity, player.isSneaking());
             entity.getPersistentDataContainer().set(displayKey, PersistentDataType.STRING, player.getUniqueId().toString());
         });
 
+        if (isPassenger) {
+            player.addPassenger(display);
+        }
+
         activeDisplays.put(player.getUniqueId(), display);
+    }
+
+    /**
+     * Applies the mathematical scale, rotation, and translation offsets
+     * based on current player sneak state and configuration.
+     */
+    public void applyTransformation(ItemDisplay display, boolean sneaking) {
+        ConfigManager config = plugin.getConfigManager();
+        boolean isPassenger = config.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
+
+        float tx = (float) (isPassenger ? config.getPassengerOffsetX() : 0.0);
+        float ty = (float) (isPassenger ? config.getPassengerOffsetY() : 0.0);
+        float tz = (float) (isPassenger ? config.getPassengerOffsetZ() : 0.0);
+        float pitch = config.getRotationPitch();
+
+        if (sneaking) {
+            ty += (float) config.getCrouchOffsetY();
+            tz += (float) config.getCrouchOffsetZ();
+            pitch += config.getCrouchPitchTilt();
+        }
+
+        Transformation transformation = new Transformation(
+                new Vector3f(tx, ty, tz),
+                new AxisAngle4f((float) Math.toRadians(config.getRotationYaw()), 0f, 1f, 0f),
+                new Vector3f(config.getScaleX(), config.getScaleY(), config.getScaleZ()),
+                new AxisAngle4f((float) Math.toRadians(pitch), 1f, 0f, 0f)
+        );
+        display.setTransformation(transformation);
+        display.setInterpolationDuration(2);
+        display.setInterpolationDelay(0);
+    }
+
+    /**
+     * Smoothly tilts the backpack transformation when the player sneaks or stands back up.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onSneak(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        ItemDisplay display = activeDisplays.get(player.getUniqueId());
+        if (display != null && display.isValid() && plugin.getConfigManager().getItemDisplayMode().equalsIgnoreCase("PASSENGER")) {
+            applyTransformation(display, event.isSneaking());
+        }
+    }
+
+    /**
+     * Prevents the backpack display passenger from being ejected or dismounted.
+     */
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onDismount(EntityDismountEvent event) {
+        if (event.getEntity() instanceof ItemDisplay display) {
+            if (display.getPersistentDataContainer().has(displayKey, PersistentDataType.STRING)) {
+                if (!plugin.isEnabled()) return;
+                Entity dismounted = event.getDismounted();
+                if (dismounted instanceof Player player && player.isOnline() && activeDisplays.containsKey(player.getUniqueId())) {
+                    event.setCancelled(true);
+                }
+            }
+        }
     }
 
     /**
@@ -119,7 +182,7 @@ public class BackpackDisplayManager {
     }
 
     /**
-     * Calculates the exact coordinate behind the player's upper spine.
+     * Calculates the exact coordinate behind the player's upper spine (for TELEPORT mode fallback).
      */
     public Location calculateBackLocation(Player player) {
         if (player == null) {
@@ -162,11 +225,12 @@ public class BackpackDisplayManager {
     }
 
     /**
-     * Ticks movement and visibility for all active backpack displays smoothly.
+     * Ticks movement and visibility for all active backpack displays.
      */
     private void startTickTask() {
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             ConfigManager cfg = plugin.getConfigManager();
+            boolean isPassenger = cfg.getItemDisplayMode().equalsIgnoreCase("PASSENGER");
 
             for (Map.Entry<UUID, ItemDisplay> entry : activeDisplays.entrySet()) {
                 Player player = Bukkit.getPlayer(entry.getKey());
@@ -183,7 +247,7 @@ public class BackpackDisplayManager {
                 // Check world match
                 if (!display.getWorld().equals(player.getWorld())) {
                     display.remove();
-                    ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, com.harukiyu.claritywardrobe.api.WardrobeSlotType.BACKPACK);
+                    ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, WardrobeSlotType.BACKPACK);
                     if (cosmetic != null) {
                         updateCosmetic(player, cosmetic);
                     }
@@ -204,17 +268,24 @@ public class BackpackDisplayManager {
                 } else {
                     ItemStack current = display.getItemStack();
                     if (current.getType().isAir()) {
-                        ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, com.harukiyu.claritywardrobe.api.WardrobeSlotType.BACKPACK);
+                        ItemStack cosmetic = plugin.getCosmeticManager().getCosmetic(player, WardrobeSlotType.BACKPACK);
                         if (cosmetic != null) {
                             display.setItemStack(cosmetic);
                         }
                     }
                 }
 
-                // Smoothly update location
-                Location targetLoc = calculateBackLocation(player);
-                if (targetLoc != null) {
-                    display.teleport(targetLoc);
+                if (isPassenger) {
+                    // Lock directly as passenger to eliminate all walking/running delay
+                    if (!player.getPassengers().contains(display)) {
+                        player.addPassenger(display);
+                    }
+                } else {
+                    // Fallback standalone teleport mode
+                    Location targetLoc = calculateBackLocation(player);
+                    if (targetLoc != null) {
+                        display.teleport(targetLoc);
+                    }
                 }
             }
         }, 1L, 1L);
