@@ -1,0 +1,170 @@
+# ==============================================================================
+#                      ClarityWardrobe Menu Configuration
+#                      File: wardrobe-menu.yml
+# ==============================================================================
+# This file defines the dynamic wardrobe inventory GUI.
+# Server admins can configure title, rows, slot positions, item icons,
+# Custom Model Data, and validation criteria.
+
+title: "<gradient:#38ef7d:#11998e><bold>Clarity Wardrobe</bold></gradient> <dark_gray>| Cosmetics</dark_gray>"
+rows: 6
+
+slots:
+  # --------------------------------------------------------------------------
+  # HELMET COSMETIC SLOT
+  # --------------------------------------------------------------------------
+  helmet:
+    slot: 20
+    # Custom Model Data Validation
+    validation:
+      # If true, the item MUST have a Custom Model Data (CMD) value.
+      require-custom-model-data: true
+      # Allowed Custom Model Data IDs.
+      # Use ["*"] to allow any item with a valid CMD.
+      # Or list exact numbers (e.g. [10001, 10002, 10003]).
+      allowed-cmd:
+        - "*"
+      # Allowed base materials. Use ["*"] for any material.
+      allowed-materials:
+        - "*"
+    # Placeholder item displayed when no cosmetic hat is equipped in this slot
+    placeholder:
+      material: LEATHER_HELMET
+      custom-model-data: 0
+      name: "<yellow><bold>Hat / Helmet Cosmetic Slot</bold></yellow>"
+      lore:
+        - "<dark_gray>Slot: Cosmetic Head</dark_gray>"
+        - ""
+        - "<gray>Status: <red>No cosmetic equipped</red>"
+        - ""
+        - "<green>▶ Click with a custom cosmetic hat to equip!</green>"
+        - "<gray>Your real combat helmet stats are preserved.</gray>"
+        - ""
+        - "<dark_aqua>✦ Requires Custom Model Data</dark_aqua>"
+    # Additional lore lines appended when a cosmetic is currently equipped
+    equipped-lore-append:
+      - ""
+      - "<green>✔ Status: Currently Equipped</green>"
+      - "<red>▶ Click to unequip and retrieve your cosmetic item.</red>"
+
+  # --------------------------------------------------------------------------
+  # BACKPACK / WINGS COSMETIC SLOT
+  # --------------------------------------------------------------------------
+  backpack:
+    slot: 24
+    # Custom Model Data Validation
+    validation:
+      require-custom-model-data: true
+      # Allowed Custom Model Data IDs.
+      # Use ["*"] to allow any item with a valid CMD, or specify exact list.
+      allowed-cmd:
+        - "*"
+      allowed-materials:
+        - "*"
+    # Placeholder item displayed when no cosmetic backpack is equipped
+    placeholder:
+      material: ELYTRA
+      custom-model-data: 0
+      name: "<aqua><bold>Backpack / Wings Slot</bold></aqua>"
+      lore:
+        - "<dark_gray>Slot: Cosmetic Back/Wings</dark_gray>"
+        - ""
+        - "<gray>Status: <red>No cosmetic equipped</red>"
+        - ""
+        - "<green>▶ Click with a custom backpack or wings to equip!</green>"
+        - "<gray>Rendered visually on your back without altering armor.</gray>"
+        - ""
+        - "<dark_aqua>✦ Requires Custom Model Data</dark_aqua>"
+    # Additional lore lines appended when a cosmetic is currently equipped
+    equipped-lore-append:
+      - ""
+      - "<green>✔ Status: Currently Equipped</green>"
+      - "<red>▶ Click to unequip and retrieve your cosmetic item.</red>"
+
+# ----------------------------------------------------------------------------
+# ACTION BUTTONS & DECORATIONS
+# ----------------------------------------------------------------------------
+buttons:
+  # Unequip All active cosmetics
+  unequip-all:
+    slot: 40
+    material: BARRIER
+    custom-model-data: 0
+    name: "<red><bold>Unequip All Cosmetics</bold></red>"
+    lore:
+      - "<gray>Quickly remove both cosmetic items and</gray>"
+      - "<gray>return them directly to your inventory.</gray>"
+      - ""
+      - "<yellow>▶ Click to unequip all</yellow>"
+
+  # Close menu button
+  close:
+    slot: 49
+    material: IRON_DOOR
+    custom-model-data: 0
+    name: "<red><bold>Close Menu</bold></red>"
+    lore:
+      - "<gray>Click to exit the wardrobe GUI.</gray>"
+
+  # Info button
+  info:
+    slot: 4
+    material: BOOK
+    custom-model-data: 0
+    name: "<light_purple><bold>How Cosmetics Work</bold></light_purple>"
+    lore:
+      - "<gray>Cosmetics equipped in this wardrobe are</gray>"
+      - "<gray><gold>purely visual</gold> overlays!</gray>"
+      - ""
+      - "<gray>• Your real armor defense & stats remain <green>100% active</green>.</gray>"
+      - "<gray>• Protection, thorns, and enchants still work.</gray>"
+      - "<gray>• Other players will see your stylish visual gear.</gray>"
+
+# ----------------------------------------------------------------------------
+# CUSTOM DECORATIVE ITEMS
+# Admins can add any number of decorative items here
+# ----------------------------------------------------------------------------
+decorations:
+  mirror-frame-left:
+    slot: 19
+    material: CYAN_STAINED_GLASS_PANE
+    custom-model-data: 0
+    name: "<dark_aqua>« Head Cosmetic »</dark_aqua>"
+    lore: []
+  mirror-frame-right:
+    slot: 21
+    material: CYAN_STAINED_GLASS_PANE
+    custom-model-data: 0
+    name: "<dark_aqua>« Head Cosmetic »</dark_aqua>"
+    lore: []
+  backpack-frame-left:
+    slot: 23
+    material: LIGHT_BLUE_STAINED_GLASS_PANE
+    custom-model-data: 0
+    name: "<blue>« Back Cosmetic »</blue>"
+    lore: []
+  backpack-frame-right:
+    slot: 25
+    material: LIGHT_BLUE_STAINED_GLASS_PANE
+    custom-model-data: 0
+    name: "<blue>« Back Cosmetic »</blue>"
+    lore: []
+  center-divider:
+    slot: 22
+    material: END_CRYSTAL
+    custom-model-data: 0
+    name: "<gradient:#ff9a9e:#fecfef><bold>Wardrobe Center</bold></gradient>"
+    lore:
+      - "<gray>Equip your visual items on the sides!</gray>"
+
+# ----------------------------------------------------------------------------
+# BACKGROUND / FILLER ITEM
+# ----------------------------------------------------------------------------
+background:
+  enabled: true
+  material: GRAY_STAINED_GLASS_PANE
+  custom-model-data: 0
+  name: "<dark_gray> "
+  lore: []
+  # If fill-empty is true, any slot not explicitly defined above will be filled.
+  fill-empty: true

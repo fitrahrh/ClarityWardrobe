@@ -1,0 +1,30 @@
+# ==============================================================================
+#                      ClarityWardrobe Language File
+#                 Formatted using Adventure MiniMessage
+# ==============================================================================
+
+prefix: "<gradient:#4facfe:#00f2fe><b>ClarityWardrobe</b></gradient> <dark_gray>»</dark_gray> "
+
+messages:
+  gui-opened: "<gray>Opening your cosmetic wardrobe...</gray>"
+  
+  helmet-equipped: "<green>Equipped <white><item></white> as your hat cosmetic!</green>"
+  helmet-unequipped: "<yellow>Helmet cosmetic unequipped and returned to inventory.</yellow>"
+  
+  backpack-equipped: "<green>Equipped <white><item></white> as your backpack cosmetic!</green>"
+  backpack-unequipped: "<yellow>Backpack cosmetic unequipped and returned to inventory.</yellow>"
+  
+  all-unequipped: "<gold>All active cosmetics have been unequipped and returned.</gold>"
+  no-cosmetics-equipped: "<gray>You currently have no cosmetics equipped.</gray>"
+  
+  # Error messages
+  error-no-cmd: "<red>This item is not a cosmetic! Items must have <gold>Custom Model Data</gold> to be placed here.</red>"
+  error-unapproved-cmd: "<red>This item is not an approved cosmetic for this slot (CMD: <gold><cmd></gold>).</red>"
+  error-unapproved-material: "<red>This item type (<gold><material></gold>) is not allowed in this slot.</red>"
+  error-inventory-full: "<red>Your inventory is full! The unequipped cosmetic was dropped at your feet.</red>"
+  error-no-permission: "<red>You do not have permission to use this command.</red>"
+  
+  # Admin messages
+  reload-success: "<green>All configuration files, language, and wardrobe menus have been reloaded!</green>"
+  player-only: "<red>This command can only be executed by players.</red>"
+  unknown-subcommand: "<red>Unknown subcommand! Usage: <gray>/wardrobe [reload]</gray></red>"

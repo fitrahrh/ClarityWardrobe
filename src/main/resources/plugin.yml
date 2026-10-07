@@ -1,0 +1,23 @@
+name: ClarityWardrobe
+version: '1.0.0'
+main: com.harukiyu.claritywardrobe.ClarityWardrobe
+api-version: '1.21'
+author: fitrahrh
+description: High-performance cosmetic wardrobe plugin for Paper 1.21+
+commands:
+  wardrobe:
+    description: Open your cosmetics wardrobe GUI
+    aliases: [cw, cosmetics]
+    permission: claritywardrobe.use
+    usage: "§cUsage: /<command> [reload]"
+permissions:
+  claritywardrobe.use:
+    description: Allows players to open and use the wardrobe GUI
+    default: true
+  claritywardrobe.admin:
+    description: Allows administrative commands such as plugin reload
+    default: op
+soft-depend:
+  - ProtocolLib
+  - ItemsAdder
+  - PlaceholderAPI

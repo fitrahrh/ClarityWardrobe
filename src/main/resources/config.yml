@@ -1,0 +1,81 @@
+# ==============================================================================
+#                      ClarityWardrobe Configuration
+#          High-Performance, Lag-Free Cosmetic Wardrobe Plugin for Paper 1.21+
+# ==============================================================================
+
+# Settings for cosmetic visual rendering
+rendering:
+  # Method to render cosmetic helmet/hat:
+  # - BOTH (Recommended): Combines ProtocolLib (for other players) and ItemDisplay (for self F5 third-person view).
+  # - ITEM_DISPLAY: Uses Minecraft 1.21+ ItemDisplay entity attached to the player's head.
+  # - PROTOCOLLIB: Intercepts ENTITY_EQUIPMENT packets only.
+  helmet-renderer: BOTH
+
+  # Method to render backpack and wings:
+  # - ITEM_DISPLAY: Uses Minecraft 1.21+ native ItemDisplay entity attached to player's back.
+  #                 Extremely lightweight, zero tick lag, smooth client interpolation.
+  # - CHEST_PACKET: Uses ProtocolLib to intercept chestplate equipment packets (for armor/elytra models).
+  backpack-renderer: ITEM_DISPLAY
+
+  # ItemDisplay fine-tuning settings (Only used when backpack-renderer is ITEM_DISPLAY)
+  item-display:
+    # Offset relative to player position [X (left/right), Y (up/down), Z (forward/backward)]
+    # Z is negative for behind the player's spine/back.
+    offset-x: 0.0
+    offset-y: 1.15
+    offset-z: -0.22
+
+    # Scale of the cosmetic item display
+    scale-x: 1.0
+    scale-y: 1.0
+    scale-z: 1.0
+
+    # Rotation (in degrees) to orient the cosmetic on the player's back
+    # Yaw 180 flips the item to face outwards away from the back.
+    rotation-yaw: 180.0
+    rotation-pitch: 0.0
+
+    # Crouch offset adjustment when player sneaks
+    crouch-offset-y: -0.25
+    crouch-offset-z: -0.05
+    crouch-pitch-tilt: 28.0
+
+    # Hide backpack while swimming, gliding with elytra, or sleeping
+    hide-when-gliding: true
+    hide-when-swimming: true
+    hide-when-sleeping: true
+
+# Sound effects for GUI interactions
+sounds:
+  equip:
+    enabled: true
+    sound: ITEM_ARMOR_EQUIP_NETHERITE
+    volume: 1.0
+    pitch: 1.2
+  unequip:
+    enabled: true
+    sound: ITEM_ARMOR_EQUIP_LEATHER
+    volume: 1.0
+    pitch: 0.8
+  error:
+    enabled: true
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 1.0
+  menu-click:
+    enabled: true
+    sound: UI_BUTTON_CLICK
+    volume: 0.8
+    pitch: 1.0
+  menu-open:
+    enabled: true
+    sound: ITEM_ARMOR_EQUIP_GENERIC
+    volume: 0.8
+    pitch: 1.1
+
+# Storage options
+storage:
+  # File to store player cosmetic data
+  file: "wardrobe-data.yml"
+  # Auto-save interval in minutes (0 to disable periodic auto-save; saves on change & quit)
+  auto-save-minutes: 5
